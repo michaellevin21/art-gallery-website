@@ -13,13 +13,7 @@ app.use(session({
     saveUninitialized: true,
   }));
 
-
-  function checkIfLoggedIn(req, res, next) {
-    if (req.session && req.session.userId) {
-      return res.status(403).send('<p>Another user is already logged in in this browser window</p>');
-    }
-    next();
-  }
+let curAccount = {username: '', password: ''};
 
 /*let userRouter = require("./user-router");
 app.use("/users", userRouter);
@@ -40,22 +34,43 @@ db.once('open', async function() {
 let accounts = db.collection('accounts');
 
 app.get('/', function(req, res) {
-	res.render('index');
+  res.render('index');
 });
 
 app.get('/create',function(req,res){
     res.render('create');
 });
 
-app.post('/accounts',checkIfLoggedIn,async function(req,res){
-    if( await accounts.findOne({username: req.body.username})){
-        res.status(409).send('<p>This username is already taken</p>');
+app.get('/login',function(req,res){
+  res.render('login');
+});
+
+app.post('/accounts',async function(req,res){
+    if(curAccount.username != ''){
+      res.status(403).send('<p>Another user is already logged in within this browser window</p>')
     }
-    else{
+    if(req.body.create == ''){
+      if( await accounts.findOne({username: req.body.username})){
+        res.status(409).send('<p>This username is already taken</p>');
+      }
+      else{
         let user = {username: req.body.username, password: req.body.password, type: 'patron'};
         await accounts.insertOne(user);
+        curAccount = user;
         res.status(201);
         res.render('home',{user});
+      }
+    }
+    else{
+      let user = await accounts.findOne({username: req.body.username, password: req.body.password});
+      if(user){
+        curAccount = user;
+        res.status(200);
+        res.render('home',{user});
+      }
+      else{
+        res.status(401).send('<p>Incorrect Username or Password</p>');
+      }
     }
 
 });
