@@ -2,16 +2,11 @@ const express = require('express');
 const app = express();
 const mongoose = require("mongoose");
 const parser = require('body-parser');
-const session = require('express-session');
+
 
 
 app.set("view engine", "pug");
 app.use(parser.urlencoded({extended:true}));
-app.use(session({
-    secret: 'Zt@GYMb7Nu',
-    resave: false,
-    saveUninitialized: true,
-  }));
 
 let curAccount = {username: '', password: ''};
 
@@ -32,6 +27,7 @@ db.once('open', async function() {
 });
 
 let accounts = db.collection('accounts');
+let gallery = db.collection('gallery');
 
 app.get('/', function(req, res) {
   res.render('index');
@@ -73,4 +69,13 @@ app.post('/accounts',async function(req,res){
       }
     }
 
+});
+
+app.get('/gallery',async function(req,res){
+  if(curAccount.username == ''){
+    res.render('index');
+  }
+  else{
+    res.render('gallery',{results:await gallery.find({}).toArray(),start:0,end:10});
+  }
 });

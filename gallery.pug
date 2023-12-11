@@ -1,0 +1,29 @@
+extends header
+
+block content 
+    form(action='/artworks',method='get')
+        input(type='text', name='title', placeholder='Artwork Title')
+        input(type='text', name='name', placeholder='Artist Name')
+        input(type='text', name='category', placeholder='Artwork Category')
+        button(type='submit') Search 
+    
+    each artwork in results.slice(start, end)
+      div
+        p Title: #{artwork.Title}
+        a(href=`location.href='/artists/${artwork.Artist}'`) Artist: #{artwork.Artist}
+        br
+        p Year: #{artwork.Year}
+        p Category: #{artwork.Category}
+        p Medium: #{artwork.Medium}
+        p Description: #{artwork.Description}
+        img(src=artwork.Poster)
+        
+    if start > 0
+        button(type='button', onclick=`location.href='/previous/${start}'`) Previous
+        
+    if end < results.length
+        button(type='button', onclick=`location.href='/next/${end}'`) Next
+
+    
+ 
+    
