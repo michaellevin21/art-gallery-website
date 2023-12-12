@@ -12,7 +12,7 @@ block content
     each artwork in results.slice(start, end)
       div
         p Title: #{artwork.Title}
-        a(href=`location.href='/artists/${encodeURI(artwork.Artist)}'`) Artist: #{artwork.Artist}
+        a(href=`/artist/${artwork.Artist.replace(/\s/g, '_')}`) Artist: #{artwork.Artist}
         br
         p Year: #{artwork.Year}
         p Category: #{artwork.Category}
@@ -25,11 +25,11 @@ block content
         else
             span Reviews: #{artwork.Reviews}
         if !user.reviewed.includes(artwork.Title)
-            button(type='button', onclick=`location.href='/${artwork.Title}/reviews'`) Add Review
+            button(type='button', onclick=`location.href='/${artwork.Title.replace(/\s/g, '_')}/review'`) Add Review
         br
         span Likes: #{artwork.Likes}
         if !user.liked.includes(artwork.Title)
-            button(type='button', onclick=`location.href='/${artwork.Title}/likes'`) Add Like
+            button(type='button', onclick=`location.href='/${artwork.Title.replace(/\s/g, '_')}/like'`) Add Like
         
     if start > 0
         button(type='button', onclick=`location.href='/previous/${start}'`) Previous

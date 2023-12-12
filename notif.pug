@@ -1,6 +1,6 @@
 extends header
 
 block content 
-
+    h2 Notifications
     each notif in user.notifications.reverse()
         p #{notif}

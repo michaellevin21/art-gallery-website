@@ -1,0 +1,8 @@
+extends header
+
+block content
+
+    form(action=`/${artwork.Title.replace(/\s/g, '_')}/reviews`,method='post')
+        textarea(name='review',rows='5', cols='50', placeholder='Type Your Review Here')
+        br
+        button(type='submit') Add Review

@@ -39,6 +39,7 @@ for(let name of names){
 	person.name = name;
 	person.artworks = [];
 	person.workshops = [];
+	person.followers = [];
 	people.push(person);
 }
 

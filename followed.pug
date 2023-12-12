@@ -3,5 +3,5 @@ extends header
 block content
 
     each artist in user.followed
-        a(href=`location.href='/artists/${artist}'`) Artist: #{artist.name}
+        a(href=`/artist/${artist.replace(/\s/g, '_')}`) #{artist}
         br
