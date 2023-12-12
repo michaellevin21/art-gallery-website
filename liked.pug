@@ -5,7 +5,7 @@ block content
     for artwork in user.liked
         div
         p Title: #{artwork.Title}
-        a(href=`location.href='/artists/${artwork.Artist}'`) Artist: #{artwork.Artist}
+        a(href=`location.href='/artists/${encodeURI(artwork.Artist)}'`) Artist: #{artwork.Artist}
         br
         p Year: #{artwork.Year}
         p Category: #{artwork.Category}

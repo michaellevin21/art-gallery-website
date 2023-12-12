@@ -1,0 +1,41 @@
+extends header
+
+block content
+
+    h2 artist.name
+    if !user.followed.includes[artist.name]
+        button(type='button', onclick=`location.href='/${artwork.Title}/reviews'`) Follow
+    else
+        button(type='button', onclick=`location.href='/${artwork.Title}/reviews'`) Unfollow
+
+    h1 Artworks: 
+    each artwork in artist.artworks
+        div
+        p Title: #{artwork.Title}
+        p Year: #{artwork.Year}
+        p Category: #{artwork.Category}
+        p Medium: #{artwork.Medium}
+        p Description: #{artwork.Description}
+        img(src=artwork.Poster)
+        br
+        if artwork.Reviews.length == 0
+            span Reviews: No Reviews
+        else
+            span Reviews: #{artwork.Reviews}
+        if !user.reviewed.includes(artwork.Title)
+            button(type='button', onclick=`location.href='/${artwork.Title}/reviews'`) Add Review
+        br
+        span Likes: #{artwork.Likes}
+        if !user.liked.includes(artwork.Title)
+            button(type='button', onclick=`location.href='/${artwork.Title}/likes'`) Add Like
+
+    h1 Workshops: 
+    each workshop in artist.workshops
+        div
+        p Title: #{workshop.title}
+        if !user.workshops.includes(artwork.Title)
+            button(type='button', onclick=`location.href='/${artwork.Title}/reviews'`) Enroll
+        else
+            button(type='button', onclick=`location.href='/${artwork.Title}/likes'`) Unenroll
+
+    

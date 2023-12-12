@@ -42,6 +42,15 @@ app.get('/login',function(req,res){
   res.render('login');
 });
 
+app.get('/home',function(req,res){
+  if(curAccount.username == ''){
+    res.render('index');
+  }
+  else{
+    res.render('home',{user:curAccount});
+  }
+});
+
 app.post('/accounts',async function(req,res){
     if(curAccount.username != ''){
       res.status(403).send('<p>Another user is already logged in within this browser window</p>')
@@ -51,7 +60,7 @@ app.post('/accounts',async function(req,res){
         res.status(409).send('<p>This username is already taken</p>');
       }
       else{
-        let user = {username: req.body.username, password: req.body.password, type: 'patron',reviewed: [], liked: [], notifications: [], followed: []};
+        let user = {username: req.body.username, password: req.body.password, type: 'patron',reviewed: [], liked: [], notifications: [], followed: [], workshops: []};
         await accounts.insertOne(user);
         curAccount = user;
         res.status(201);
@@ -144,4 +153,17 @@ app.get('/artworks',async function(req,res){
   }
 });
 
-app.get('/artist')
+app.get('/artist/:name',async function(req,res){
+  if(curAccount.username == ''){
+    res.render('index');
+  }
+  else{
+    if(req.params.name == curAccount.username){
+      res.render('home',{user:curAccount});
+    }
+    else{
+      let artist = await artists.findOne({name: req.params.name});
+      res.render('artist',{artist,user:curAccount});
+    } 
+  }
+});

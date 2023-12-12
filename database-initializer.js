@@ -8,14 +8,14 @@ const path = require("path");
 const faker = require('faker');
 
 
-//Create and save supplies
+
 
 let artworks = JSON.parse(fs.readFileSync('gallery.json', 'utf8'));
 
 
-works = [];
-names = [];
-people = [];
+let works = [];
+let names = [];
+let people = [];
 
 for(let art of artworks){
 	let newArt = {};
@@ -34,9 +34,9 @@ for(let art of artworks){
     works.push(newArt);
 }
 
-for(let name in names){
+for(let name of names){
 	let person = {};
-	person.name = names[name];
+	person.name = name;
 	person.artworks = [];
 	person.workshops = [];
 	people.push(person);
@@ -53,7 +53,7 @@ db.once('open', async function () {
 	const gallery = db.collection('gallery');
 	const artists = db.collection('artists');
 
-	artists.insertMany(people, (insertErr, result) => {
+	await artists.insertMany(people, (insertErr, result) => {
 		if (insertErr) {
 		  console.error('Error inserting artists into MongoDB:', insertErr);
 		} else {
@@ -62,11 +62,7 @@ db.once('open', async function () {
 	});
 	console.log("All artists saved.");
 	
-	for (let artwork in works){
-		artists.updateOne({name: works[artwork].Artist},{$push:{artworks: works[artwork]}});
-	}
-	
-	gallery.insertMany(works, (insertErr, result) => {
+	await gallery.insertMany(works, (insertErr, result) => {
 		if (insertErr) {
 		  console.error('Error inserting documents into MongoDB:', insertErr);
 		} else {
@@ -74,4 +70,11 @@ db.once('open', async function () {
 		}
 	});
 	console.log("All artworks saved.");
+
+	const galleryArtworks = await gallery.find({}).toArray();
+	for (let artwork of galleryArtworks) {
+  		await artists.updateOne({name: artwork.Artist}, {$push: {artworks: artwork}});
+	}
+
+	
 });
