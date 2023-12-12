@@ -1,0 +1,26 @@
+extends header
+
+block content 
+
+    for artwork in user.reviewed 
+        div
+        p Title: #{artwork.Title}
+        a(href=`location.href='/artists/${artwork.Artist}'`) Artist: #{artwork.Artist}
+        br
+        p Year: #{artwork.Year}
+        p Category: #{artwork.Category}
+        p Medium: #{artwork.Medium}
+        p Description: #{artwork.Description}
+        img(src=artwork.Poster)
+        br
+        if artwork.Reviews.length == 0
+            span Reviews: No Reviews
+        else 
+            span Reviews: #{artwork.Reviews}
+            button(type='button', onclick=`location.href='/${artwork.Title}/reviews'`) Remove Review
+        br
+        span Likes: #{artwork.Likes}
+        if user.liked.includes(artwork)
+            button(type='button', onclick=`location.href='/${artwork.Title}/likes'`) Remove Like
+        else 
+            button(type='button', onclick=`location.href='/${artwork.Title}/likes'`) Add Like

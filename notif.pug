@@ -1,0 +1,6 @@
+extends header
+
+block content 
+
+    each notif in user.notifications.reverse()
+        p #{notif}

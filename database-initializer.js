@@ -14,17 +14,32 @@ let artworks = JSON.parse(fs.readFileSync('gallery.json', 'utf8'));
 
 
 works = [];
+names = [];
+people = [];
 
 for(let art of artworks){
 	let newArt = {};
-    newArt.Title = art.Title;
-	newArt.Artist = art.Artist;
+    newArt.Title = art.Title.toUpperCase();
+	newArt.Artist = art.Artist.toUpperCase();
+	if(!names.includes(newArt.Artist)){
+		names.push(newArt.Artist);
+	}
     newArt.Year = art.Year;
-    newArt.Category = art.Category;
+    newArt.Category = art.Category.toUpperCase();
     newArt.Medium = art.Medium;
     newArt.Description = art.Description;
     newArt.Poster = art.Poster;
+	newArt.Reviews = [];
+	newArt.Likes = 0;
     works.push(newArt);
+}
+
+for(let name in names){
+	let person = {};
+	person.name = names[name];
+	person.artworks = [];
+	person.workshops = [];
+	people.push(person);
 }
 
 mongoose.connect('mongodb://127.0.0.1/gallery');
@@ -36,7 +51,21 @@ db.once('open', async function () {
 	console.log("Dropped database. Starting re-creation.");
 
 	const gallery = db.collection('gallery');
+	const artists = db.collection('artists');
 
+	artists.insertMany(people, (insertErr, result) => {
+		if (insertErr) {
+		  console.error('Error inserting artists into MongoDB:', insertErr);
+		} else {
+		  console.log(`Inserted ${result.insertedCount} artists into the supplies collection`);
+		}
+	});
+	console.log("All artists saved.");
+	
+	for (let artwork in works){
+		artists.updateOne({name: works[artwork].Artist},{$push:{artworks: works[artwork]}});
+	}
+	
 	gallery.insertMany(works, (insertErr, result) => {
 		if (insertErr) {
 		  console.error('Error inserting documents into MongoDB:', insertErr);

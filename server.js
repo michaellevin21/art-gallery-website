@@ -28,6 +28,7 @@ db.once('open', async function() {
 
 let accounts = db.collection('accounts');
 let gallery = db.collection('gallery');
+let artists = db.collection('artists');
 
 app.get('/', function(req, res) {
   res.render('index');
@@ -50,7 +51,7 @@ app.post('/accounts',async function(req,res){
         res.status(409).send('<p>This username is already taken</p>');
       }
       else{
-        let user = {username: req.body.username, password: req.body.password, type: 'patron'};
+        let user = {username: req.body.username, password: req.body.password, type: 'patron',reviewed: [], liked: [], notifications: [], followed: []};
         await accounts.insertOne(user);
         curAccount = user;
         res.status(201);
@@ -76,6 +77,71 @@ app.get('/gallery',async function(req,res){
     res.render('index');
   }
   else{
-    res.render('gallery',{results:await gallery.find({}).toArray(),start:0,end:10});
+    res.render('gallery',{results:await gallery.find({}).toArray(),start:0,end:10,user:curAccount});
   }
 });
+
+app.get('/notif',function(req,res){
+  if(curAccount.username == ''){
+    res.render('index');
+  }
+  else{
+    res.render('notif',{user:curAccount});
+  }
+  
+});
+
+app.get('/logout',function(req,res){
+  curAccount = {username: '', password: ''};
+  res.render('index');
+});
+
+app.get('/followed',function(req,res){
+  if(curAccount.username == ''){
+    res.render('index');
+  }
+  else{
+    res.render('followed',{user:curAccount});
+  }
+  
+});
+
+app.get('/liked',function(req,res){
+  if(curAccount.username == ''){
+    res.render('index');
+  }
+  else{
+    res.render('liked',{user:curAccount});
+  }
+});
+
+app.get('/reviews',function(req,res){
+  if(curAccount.username == ''){
+    res.render('index');
+  }
+  else{
+    res.render('reviewed',{user:curAccount});
+  }
+});
+
+app.get('/artworks',async function(req,res){
+  if(curAccount.username == ''){
+    res.render('index');
+  }
+  else{
+    filter = {};
+    if(req.query.title){
+      filter.Title = req.query.title.toUpperCase();
+    }
+    if(req.query.name){
+      filter.Artist = req.query.name.toUpperCase();
+    }
+    if(req.query.category){
+      filter.Category = req.query.category.toUpperCase();
+    }
+    results = await gallery.find(filter).toArray();
+    res.render('gallery',{results,start:0,end:10,user:curAccount});
+  }
+});
+
+app.get('/artist')

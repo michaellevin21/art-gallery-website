@@ -1,0 +1,7 @@
+extends header 
+
+block content
+
+    each artist in user.followed
+        a(href=`location.href='/artists/${artist}'`) Artist: #{artist.name}
+        br
