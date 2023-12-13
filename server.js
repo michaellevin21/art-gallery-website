@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const mongoose = require("mongoose");
 const parser = require('body-parser');
-const { Cookie } = require('express-session');
+
 
 
 
@@ -169,7 +169,7 @@ app.get('/artist/:name',async function(req,res){
     for (let i = 1; i < req.params.name.split('_').length; i++){
       artistName += ` ${req.params.name.split('_')[i]}`;
     }
-    if(artistName == curAccount.username){
+    if(artistName == curAccount.username.toUpperCase()){
       res.render('home',{user:curAccount});
     }
     else{
@@ -387,6 +387,197 @@ app.get('/:name/unfollow',async function(req,res){
   }
 });
 
+app.get('/change',async function(req,res){
+  if (curAccount.username == '') {
+    res.render('index');
+  }
+  else{
+    if(curAccount.type == 'artist'){
+      curAccount.type = 'patron';
+      curAccount.notifications.push("You changed to a patron account")
+      await accounts.updateOne({username:curAccount.username},{$set:curAccount});
+      res.render('home',{user:curAccount});
+    }
+    else{
+      let artist = await artists.findOne({name:curAccount.username.toUpperCase()});
+      if(!artist){
+        res.render('addArtwork');
+      }
+      else{
+        curAccount.type = 'artist';
+        curAccount.notifications.push("You changed to an artist account")
+        await accounts.updateOne({username:curAccount.username},{$set:curAccount});
+        res.render('home',{user:curAccount});
+      }
+    }
+  }
+});
+
+app.post('/addArtwork',async function(req,res){
+  if(await gallery.findOne({Title:req.body.title.toUpperCase()})){
+    res.status(409).send('<p>There is already an artwork with this title</p>');
+  }
+  else{
+    let newArt = {};
+    newArt.Title = req.body.title.toUpperCase();
+    newArt.Artist = curAccount.username.toUpperCase();
+    newArt.Year = 2023;
+    newArt.Category = req.body.category.toUpperCase();
+    newArt.Medium = req.body.medium;
+    newArt.Description = req.body.description;
+    newArt.Poster = req.body.poster;
+    newArt.Reviews = [];
+    newArt.Likes = 0;
+    await gallery.insertOne(newArt);
+    if(! await artists.findOne({name:curAccount.username.toUpperCase()})){
+      let newArtist = {};
+      newArtist.name = curAccount.username.toUpperCase();
+      newArtist.artworks = [];
+      newArtist.workshops = [];
+      newArtist.followers = [];
+      await artists.insertOne(newArtist);
+      curAccount.type = 'artist';
+      curAccount.notifications.push("You changed to an artist account")
+      await accounts.updateOne({username:curAccount.username},{$set:curAccount});
+    }
+    artists.updateOne({name:curAccount.username.toUpperCase()},{$push:{artworks: newArt}});
+    curAccount.type = 'artist';
+    curAccount.notifications.push("You published an artwork");
+    await accounts.updateOne({username:curAccount.username},{$set:curAccount});
+    let artist = await artists.findOne({name: curAccount.username.toUpperCase()});
+    for(let user of artist.followers){
+      accounts.updateOne({username:user},{$push:{notifications: `${curAccount.username.toUpperCase()} has added a new artwork`}});
+    }
+    res.render('home',{user:curAccount});
+  }
+});
+
+app.get('/addArtwork',function(req,res){
+  if (curAccount.username == '') {
+    res.render('index');
+  }
+  else if(curAccount.type == 'patron'){
+    res.render('home',{user:curAccount});
+  }
+  else{
+    res.render('addArtwork');
+  }
+});
+
+app.post('/addWorkshop',async function(req,res){
+  let newWorkshop = {title:req.body.title,enrolled:[]};
+  await artists.updateOne({name:curAccount.username.toUpperCase()},{$push:{workshops:newWorkshop}})
+  curAccount.notifications.push("You added a workshop");
+  await accounts.updateOne({username:curAccount.username},{$set:curAccount});
+  let artist = await artists.findOne({name: curAccount.username.toUpperCase()});
+  for(let user of artist.followers){
+    accounts.updateOne({username:user},{$push:{notifications: `${curAccount.username.toUpperCase()} has added a new workshop`}});
+  }
+  res.render('home',{user:curAccount});
+});
+
+app.get('/addWorkshop',function(req,res){
+  if (curAccount.username == '') {
+    res.render('index');
+  }
+  else if(curAccount.type == 'patron'){
+    res.render('home',{user:curAccount});
+  }
+  else{
+    res.render('addWorkshop');
+  }
+});
+
+app.get('/:artist/:workshop/enroll',async function(req,res){
+  if (curAccount.username == '') {
+    res.render('index');
+  }
+  else if(!req.params.artist || !req.params.workshop){
+    res.status(404).send('<p>404 Page Not Found</p>');
+  }
+  else{
+    let artistName = `${req.params.artist.split('_')[0]}`;
+    for (let i = 1; i < req.params.artist.split('_').length; i++){
+      artistName += ` ${req.params.artist.split('_')[i]}`;
+    }
+    let artist = await artists.findOne({name: artistName});
+    if(!artist){
+      res.status(404).send('<p>Artist Not Found</p>');
+      return;
+    }
+    let workshopName = `${req.params.workshop.split('_')[0]}`;
+    for (let i = 1; i < req.params.workshop.split('_').length; i++){
+      workshopName += ` ${req.params.workshop.split('_')[i]}`;
+    }
+    let workshop = artists.findOne({name:artistName,"workshops.title": workshopName});
+    if(!workshop){
+      res.status(404).send('<p>Workshop Not Found</p>');
+      return;
+    }
+    else{
+      let shops = artist.workshops;
+      for(let w of shops){
+        if(w.title == workshopName){
+          w.enrolled.push(curAccount.username);
+        }
+      }
+      await artists.updateOne({name:artistName},{$set:{workshops:shops}});
+      curAccount.notifications.push(`You enrolled in ${workshopName}`);
+      await accounts.updateOne({username:curAccount.username},{$set:curAccount});
+      res.render('notif',{user:curAccount});
+    } 
+  }
+});
+
+app.get('/:artist/:workshop/unenroll',async function(req,res){
+  if (curAccount.username == '') {
+    res.render('index');
+  }
+  else if(!req.params.artist || !req.params.workshop){
+    res.status(404).send('<p>404 Page Not Found</p>');
+  }
+  else{
+    let artistName = `${req.params.artist.split('_')[0]}`;
+    for (let i = 1; i < req.params.artist.split('_').length; i++){
+      artistName += ` ${req.params.artist.split('_')[i]}`;
+    }
+    let artist = await artists.findOne({name: artistName});
+    if(!artist){
+      res.status(404).send('<p>Artist Not Found</p>');
+      return;
+    }
+    let workshopName = `${req.params.workshop.split('_')[0]}`;
+    for (let i = 1; i < req.params.workshop.split('_').length; i++){
+      workshopName += ` ${req.params.workshop.split('_')[i]}`;
+    }
+    let workshop = artists.findOne({name:artistName,"workshops.title": workshopName});
+    if(!workshop){
+      res.status(404).send('<p>Workshop Not Found</p>');
+      return;
+    }
+    else{
+      let shops = artist.workshops;
+      for(let w of shops){
+        if(w.title == workshopName){
+          w.enrolled.splice(w.enrolled.indexOf(curAccount.username),1);
+        }
+      }
+      await artists.updateOne({name:artistName},{$set:{workshops:shops}});
+      curAccount.notifications.push(`You unenrolled in ${workshopName}`);
+      await accounts.updateOne({username:curAccount.username},{$set:curAccount});
+      res.render('notif',{user:curAccount});
+    } 
+  }
+});
+
+app.use((req, res) => {
+  res.status(404).send('<p>404 Page Not Found</p>');
+});
+
+
+
+
         
       
+
 

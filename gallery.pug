@@ -24,11 +24,11 @@ block content
             span Reviews: No Reviews
         else
             span Reviews: #{artwork.Reviews}
-        if !user.reviewed.includes(artwork.Title)
+        if !user.reviewed.includes(artwork.Title) && artwork.Artist != user.username.toUpperCase()
             button(type='button', onclick=`location.href='/${artwork.Title.replace(/\s/g, '_')}/review'`) Add Review
         br
         span Likes: #{artwork.Likes}
-        if !user.liked.includes(artwork.Title)
+        if !user.liked.includes(artwork.Title) && artwork.Artist != user.username.toUpperCase()
             button(type='button', onclick=`location.href='/${artwork.Title.replace(/\s/g, '_')}/like'`) Add Like
         
     if start > 0

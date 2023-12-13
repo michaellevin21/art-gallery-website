@@ -24,9 +24,9 @@ block content
     each workshop in artist.workshops
         div
         p Title: #{workshop.title}
-        if !user.workshops.includes(artwork.Title)
-            button(type='button', onclick=`location.href='/${artwork.Title}/reviews'`) Enroll
+        if !workshop.enrolled.includes(user.username)
+            button(type='button', onclick=`location.href='/${artist.name.replace(/\s/g, '_')}/${workshop.title.replace(/\s/g, '_')}/enroll'`) Enroll
         else
-            button(type='button', onclick=`location.href='/${artwork.Title}/likes'`) Unenroll
+            button(type='button', onclick=`location.href='/${artist.name.replace(/\s/g, '_')}/${workshop.title.replace(/\s/g, '_')}/unenroll'`) Unenroll
 
     

@@ -11,4 +11,9 @@ block content
     br
     a(href='/liked') Liked Artworks
     br
-    a(href='/reviews') Reviewed Artworks  
+    a(href='/reviews') Reviewed Artworks
+    br
+    if user.type == 'artist'
+        button(type="button", onclick="location.href='/addArtwork'") Add Artwork
+        br
+        button(type="button", onclick="location.href='/addWorkshop'") Add Workshop
